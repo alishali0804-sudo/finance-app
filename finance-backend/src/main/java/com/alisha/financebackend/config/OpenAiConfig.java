@@ -1,0 +1,24 @@
+package com.alisha.financebackend.config;
+
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenAiConfig {
+
+    @Bean
+    public OpenAIClient openAIClient() {
+
+        String apiKey = System.getenv("OPENAI_API_KEY");
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "OPENAI_API_KEY is not configured"
+            );
+        }
+
+        return OpenAIOkHttpClient.fromEnv();
+    }
+}
