@@ -10,6 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/goals")
+@CrossOrigin(origins = "http://localhost:3000")
 public class SavingsGoalController {
 
     private final SavingsGoalService savingsGoalService;

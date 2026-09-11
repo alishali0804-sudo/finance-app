@@ -126,9 +126,12 @@ export default function Home() {
                             Transactions
                         </Link>
 
-                        <span className="cursor-default">
-              Goals
-            </span>
+                        <Link
+                            href="/goals"
+                            className="transition hover:text-gray-900"
+                        >
+                            Goals
+                        </Link>
 
                         <span className="cursor-default">
               Import
