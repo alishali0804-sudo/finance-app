@@ -1,10 +1,7 @@
 package com.alisha.financebackend.controller;
 
 import com.alisha.financebackend.service.AnalyticsService;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,14 +41,12 @@ public class AnalyticsController {
     }
 
     @GetMapping("/category-comparison")
-    public Map<String, Map<String, BigDecimal>>
-    getCategoryComparison() {
+    public Map<String, Object> getCategoryComparison() {
         return analyticsService.getCategoryComparison();
     }
 
     @GetMapping("/unusual")
-    public List<Map<String, Object>>
-    getUnusualSpending() {
+    public List<Map<String, Object>> getUnusualSpending() {
         return analyticsService.getUnusualSpending();
     }
 }

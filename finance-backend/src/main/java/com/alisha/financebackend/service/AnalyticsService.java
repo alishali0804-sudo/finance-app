@@ -1,5 +1,6 @@
 package com.alisha.financebackend.service;
 
+import com.alisha.financebackend.model.AppUser;
 import com.alisha.financebackend.model.Transaction;
 import com.alisha.financebackend.model.TransactionType;
 import com.alisha.financebackend.repository.TransactionRepository;
@@ -12,103 +13,176 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 @Service
 public class AnalyticsService {
 
     private final TransactionRepository transactionRepository;
+    private final CurrentUserService currentUserService;
 
-    public AnalyticsService(TransactionRepository transactionRepository) {
+    public AnalyticsService(
+            TransactionRepository transactionRepository,
+            CurrentUserService currentUserService
+    ) {
         this.transactionRepository = transactionRepository;
+        this.currentUserService = currentUserService;
+    }
+
+    private List<Transaction> getCurrentUserTransactions() {
+
+        AppUser user =
+                currentUserService.getCurrentUser();
+
+        return transactionRepository
+                .findByUserOrderByDateDesc(user);
     }
 
     public Map<String, BigDecimal> getSummary() {
 
-        List<Transaction> transactions = transactionRepository.findAll();
+        List<Transaction> transactions =
+                getCurrentUserTransactions();
 
-        BigDecimal totalIncome = BigDecimal.ZERO;
-        BigDecimal totalExpenses = BigDecimal.ZERO;
+        BigDecimal totalIncome =
+                BigDecimal.ZERO;
+
+        BigDecimal totalExpenses =
+                BigDecimal.ZERO;
 
         for (Transaction transaction : transactions) {
 
-            if (transaction.getType() == TransactionType.INCOME) {
-                totalIncome = totalIncome.add(transaction.getAmount());
+            if (
+                    transaction.getType()
+                            == TransactionType.INCOME
+            ) {
+                totalIncome =
+                        totalIncome.add(
+                                transaction.getAmount()
+                        );
             }
 
-            if (transaction.getType() == TransactionType.EXPENSE) {
-                totalExpenses = totalExpenses.add(transaction.getAmount());
+            if (
+                    transaction.getType()
+                            == TransactionType.EXPENSE
+            ) {
+                totalExpenses =
+                        totalExpenses.add(
+                                transaction.getAmount()
+                        );
             }
         }
 
         BigDecimal netCashFlow =
-                totalIncome.subtract(totalExpenses);
+                totalIncome.subtract(
+                        totalExpenses
+                );
 
-        Map<String, BigDecimal> summary = new LinkedHashMap<>();
+        Map<String, BigDecimal> summary =
+                new LinkedHashMap<>();
 
-        summary.put("totalIncome", totalIncome);
-        summary.put("totalExpenses", totalExpenses);
-        summary.put("netCashFlow", netCashFlow);
+        summary.put(
+                "totalIncome",
+                totalIncome
+        );
+
+        summary.put(
+                "totalExpenses",
+                totalExpenses
+        );
+
+        summary.put(
+                "netCashFlow",
+                netCashFlow
+        );
 
         return summary;
     }
 
-    public Map<String, BigDecimal> getSpendingByCategory() {
+    public Map<String, BigDecimal>
+    getSpendingByCategory() {
 
-        List<Transaction> transactions = transactionRepository.findAll();
+        List<Transaction> transactions =
+                getCurrentUserTransactions();
 
-        Map<String, BigDecimal> categoryTotals = new TreeMap<>();
+        Map<String, BigDecimal> categoryTotals =
+                new LinkedHashMap<>();
 
         for (Transaction transaction : transactions) {
 
-            if (transaction.getType() != TransactionType.EXPENSE) {
+            if (
+                    transaction.getType()
+                            != TransactionType.EXPENSE
+            ) {
                 continue;
             }
 
-            String category = transaction.getCategory();
+            String category =
+                    transaction.getCategory();
 
-            categoryTotals.put(
-                    category,
+            BigDecimal currentTotal =
                     categoryTotals.getOrDefault(
                             category,
                             BigDecimal.ZERO
-                    ).add(transaction.getAmount())
+                    );
+
+            categoryTotals.put(
+                    category,
+                    currentTotal.add(
+                            transaction.getAmount()
+                    )
             );
         }
 
         return categoryTotals;
     }
 
-    public Map<String, BigDecimal> getMonthlySpending() {
+    public Map<String, BigDecimal>
+    getMonthlySpending() {
 
-        List<Transaction> transactions = transactionRepository.findAll();
+        List<Transaction> transactions =
+                getCurrentUserTransactions();
 
-        Map<String, BigDecimal> monthlyTotals = new TreeMap<>();
+        Map<String, BigDecimal> monthlyTotals =
+                new LinkedHashMap<>();
 
-        for (Transaction transaction : transactions) {
+        transactions.stream()
+                .filter(
+                        transaction ->
+                                transaction.getType()
+                                        == TransactionType.EXPENSE
+                )
+                .sorted(
+                        (first, second) ->
+                                first.getDate()
+                                        .compareTo(
+                                                second.getDate()
+                                        )
+                )
+                .forEach(transaction -> {
 
-            if (transaction.getType() != TransactionType.EXPENSE) {
-                continue;
-            }
+                    String month =
+                            YearMonth.from(
+                                    transaction.getDate()
+                            ).toString();
 
-            YearMonth yearMonth =
-                    YearMonth.from(transaction.getDate());
+                    BigDecimal currentTotal =
+                            monthlyTotals.getOrDefault(
+                                    month,
+                                    BigDecimal.ZERO
+                            );
 
-            String month = yearMonth.toString();
-
-            monthlyTotals.put(
-                    month,
-                    monthlyTotals.getOrDefault(
+                    monthlyTotals.put(
                             month,
-                            BigDecimal.ZERO
-                    ).add(transaction.getAmount())
-            );
-        }
+                            currentTotal.add(
+                                    transaction.getAmount()
+                            )
+                    );
+                });
 
         return monthlyTotals;
     }
 
-    public Map<String, Object> getMonthlyComparison() {
+    public Map<String, Object>
+    getMonthlyComparison() {
 
         Map<String, BigDecimal> monthlySpending =
                 getMonthlySpending();
@@ -116,232 +190,382 @@ public class AnalyticsService {
         Map<String, Object> result =
                 new LinkedHashMap<>();
 
-        if (monthlySpending.size() < 2) {
+        if (monthlySpending.isEmpty()) {
+
             result.put(
-                    "message",
-                    "Not enough monthly data to compare."
+                    "currentMonth",
+                    null
             );
+
+            result.put(
+                    "currentMonthSpending",
+                    BigDecimal.ZERO
+            );
+
+            result.put(
+                    "previousMonth",
+                    null
+            );
+
+            result.put(
+                    "previousMonthSpending",
+                    BigDecimal.ZERO
+            );
+
+            result.put(
+                    "difference",
+                    BigDecimal.ZERO
+            );
+
+            result.put(
+                    "percentageChange",
+                    BigDecimal.ZERO
+            );
+
             return result;
         }
 
-        List<String> months = monthlySpending
-                .keySet()
-                .stream()
-                .sorted()
-                .toList();
+        List<String> months =
+                new ArrayList<>(
+                        monthlySpending.keySet()
+                );
 
         String currentMonth =
-                months.get(months.size() - 1);
-
-        String previousMonth =
-                months.get(months.size() - 2);
+                months.get(
+                        months.size() - 1
+                );
 
         BigDecimal currentSpending =
-                monthlySpending.get(currentMonth);
+                monthlySpending.get(
+                        currentMonth
+                );
+
+        String previousMonth = null;
 
         BigDecimal previousSpending =
-                monthlySpending.get(previousMonth);
-
-        BigDecimal changeAmount =
-                currentSpending.subtract(previousSpending);
-
-        BigDecimal changePercent =
                 BigDecimal.ZERO;
 
-        if (previousSpending.compareTo(BigDecimal.ZERO) != 0) {
-            changePercent = changeAmount
-                    .divide(
-                            previousSpending,
-                            4,
-                            RoundingMode.HALF_UP
-                    )
-                    .multiply(BigDecimal.valueOf(100))
-                    .setScale(2, RoundingMode.HALF_UP);
+        if (months.size() >= 2) {
+
+            previousMonth =
+                    months.get(
+                            months.size() - 2
+                    );
+
+            previousSpending =
+                    monthlySpending.get(
+                            previousMonth
+                    );
         }
 
-        result.put("currentMonth", currentMonth);
-        result.put("previousMonth", previousMonth);
-        result.put("currentSpending", currentSpending);
-        result.put("previousSpending", previousSpending);
-        result.put("changeAmount", changeAmount);
-        result.put("changePercent", changePercent);
+        BigDecimal difference =
+                currentSpending.subtract(
+                        previousSpending
+                );
+
+        BigDecimal percentageChange =
+                BigDecimal.ZERO;
+
+        if (
+                previousSpending.compareTo(
+                        BigDecimal.ZERO
+                ) != 0
+        ) {
+
+            percentageChange =
+                    difference
+                            .divide(
+                                    previousSpending,
+                                    4,
+                                    RoundingMode.HALF_UP
+                            )
+                            .multiply(
+                                    new BigDecimal("100")
+                            )
+                            .setScale(
+                                    2,
+                                    RoundingMode.HALF_UP
+                            );
+        }
+
+        result.put(
+                "currentMonth",
+                currentMonth
+        );
+
+        result.put(
+                "currentMonthSpending",
+                currentSpending
+        );
+
+        result.put(
+                "previousMonth",
+                previousMonth
+        );
+
+        result.put(
+                "previousMonthSpending",
+                previousSpending
+        );
+
+        result.put(
+                "difference",
+                difference
+        );
+
+        result.put(
+                "percentageChange",
+                percentageChange
+        );
 
         return result;
     }
 
-    public Map<String, Map<String, BigDecimal>>
+    public Map<String, Object>
     getCategoryComparison() {
 
         List<Transaction> transactions =
-                transactionRepository.findAll();
+                getCurrentUserTransactions();
 
-        Map<String, Map<String, BigDecimal>> result =
+        Map<String, Object> result =
                 new LinkedHashMap<>();
 
-        List<YearMonth> months = transactions
-                .stream()
-                .filter(transaction ->
-                        transaction.getType()
-                                == TransactionType.EXPENSE)
-                .map(transaction ->
-                        YearMonth.from(transaction.getDate()))
-                .distinct()
-                .sorted()
-                .toList();
+        List<Transaction> expenses =
+                transactions.stream()
+                        .filter(
+                                transaction ->
+                                        transaction.getType()
+                                                == TransactionType.EXPENSE
+                        )
+                        .toList();
 
-        if (months.size() < 2) {
+        if (expenses.isEmpty()) {
+
+            result.put(
+                    "currentMonth",
+                    null
+            );
+
+            result.put(
+                    "previousMonth",
+                    null
+            );
+
+            result.put(
+                    "currentMonthCategories",
+                    new LinkedHashMap<
+                            String,
+                            BigDecimal
+                            >()
+            );
+
+            result.put(
+                    "previousMonthCategories",
+                    new LinkedHashMap<
+                            String,
+                            BigDecimal
+                            >()
+            );
+
             return result;
         }
 
-        YearMonth currentMonth =
-                months.get(months.size() - 1);
+        YearMonth latestMonth =
+                expenses.stream()
+                        .map(
+                                transaction ->
+                                        YearMonth.from(
+                                                transaction.getDate()
+                                        )
+                        )
+                        .max(
+                                YearMonth::compareTo
+                        )
+                        .orElseThrow();
 
         YearMonth previousMonth =
-                months.get(months.size() - 2);
+                latestMonth.minusMonths(1);
 
-        Map<String, BigDecimal> currentCategories =
-                new TreeMap<>();
+        Map<String, BigDecimal>
+                currentCategories =
+                new LinkedHashMap<>();
 
-        Map<String, BigDecimal> previousCategories =
-                new TreeMap<>();
+        Map<String, BigDecimal>
+                previousCategories =
+                new LinkedHashMap<>();
 
-        for (Transaction transaction : transactions) {
-
-            if (transaction.getType()
-                    != TransactionType.EXPENSE) {
-                continue;
-            }
+        for (Transaction transaction : expenses) {
 
             YearMonth transactionMonth =
-                    YearMonth.from(transaction.getDate());
+                    YearMonth.from(
+                            transaction.getDate()
+                    );
 
-            if (transactionMonth.equals(currentMonth)) {
+            if (
+                    transactionMonth.equals(
+                            latestMonth
+                    )
+            ) {
 
-                String category =
-                        transaction.getCategory();
-
-                currentCategories.put(
-                        category,
-                        currentCategories.getOrDefault(
-                                category,
-                                BigDecimal.ZERO
-                        ).add(transaction.getAmount())
+                addToCategory(
+                        currentCategories,
+                        transaction
                 );
             }
 
-            if (transactionMonth.equals(previousMonth)) {
+            if (
+                    transactionMonth.equals(
+                            previousMonth
+                    )
+            ) {
 
-                String category =
-                        transaction.getCategory();
-
-                previousCategories.put(
-                        category,
-                        previousCategories.getOrDefault(
-                                category,
-                                BigDecimal.ZERO
-                        ).add(transaction.getAmount())
+                addToCategory(
+                        previousCategories,
+                        transaction
                 );
             }
         }
 
         result.put(
-                currentMonth.toString(),
+                "currentMonth",
+                latestMonth.toString()
+        );
+
+        result.put(
+                "previousMonth",
+                previousMonth.toString()
+        );
+
+        result.put(
+                "currentMonthCategories",
                 currentCategories
         );
 
         result.put(
-                previousMonth.toString(),
+                "previousMonthCategories",
                 previousCategories
         );
 
         return result;
     }
 
+    private void addToCategory(
+            Map<String, BigDecimal> totals,
+            Transaction transaction
+    ) {
+
+        String category =
+                transaction.getCategory();
+
+        BigDecimal currentAmount =
+                totals.getOrDefault(
+                        category,
+                        BigDecimal.ZERO
+                );
+
+        totals.put(
+                category,
+                currentAmount.add(
+                        transaction.getAmount()
+                )
+        );
+    }
+
     public List<Map<String, Object>>
     getUnusualSpending() {
 
         List<Transaction> transactions =
-                transactionRepository.findAll();
+                getCurrentUserTransactions();
 
-        List<Map<String, Object>> alerts =
+        List<Transaction> expenses =
+                transactions.stream()
+                        .filter(
+                                transaction ->
+                                        transaction.getType()
+                                                == TransactionType.EXPENSE
+                        )
+                        .toList();
+
+        List<Map<String, Object>>
+                unusualTransactions =
                 new ArrayList<>();
 
-        List<Transaction> expenses = transactions
-                .stream()
-                .filter(transaction ->
-                        transaction.getType()
-                                == TransactionType.EXPENSE)
-                .toList();
-
         if (expenses.isEmpty()) {
-            return alerts;
+            return unusualTransactions;
         }
 
-        BigDecimal totalExpenses = expenses
-                .stream()
-                .map(Transaction::getAmount)
-                .reduce(
-                        BigDecimal.ZERO,
-                        BigDecimal::add
-                );
+        BigDecimal totalExpenses =
+                expenses.stream()
+                        .map(
+                                Transaction::getAmount
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
 
-        BigDecimal averageExpense = totalExpenses
-                .divide(
-                        BigDecimal.valueOf(expenses.size()),
+        BigDecimal averageExpense =
+                totalExpenses.divide(
+                        BigDecimal.valueOf(
+                                expenses.size()
+                        ),
                         2,
                         RoundingMode.HALF_UP
                 );
 
-        BigDecimal threshold =
+        BigDecimal unusualThreshold =
                 averageExpense.multiply(
-                        BigDecimal.valueOf(2)
+                        new BigDecimal("2")
                 );
 
         for (Transaction transaction : expenses) {
 
-            if (transaction.getAmount()
-                    .compareTo(threshold) > 0) {
+            if (
+                    transaction.getAmount()
+                            .compareTo(
+                                    unusualThreshold
+                            ) > 0
+            ) {
 
-                Map<String, Object> alert =
+                Map<String, Object> item =
                         new LinkedHashMap<>();
 
-                alert.put(
-                        "type",
-                        "LARGE_TRANSACTION"
-                );
-
-                alert.put(
-                        "transactionId",
+                item.put(
+                        "id",
                         transaction.getId()
                 );
 
-                alert.put(
+                item.put(
                         "description",
                         transaction.getDescription()
                 );
 
-                alert.put(
+                item.put(
                         "amount",
                         transaction.getAmount()
                 );
 
-                alert.put(
+                item.put(
+                        "date",
+                        transaction.getDate()
+                );
+
+                item.put(
+                        "category",
+                        transaction.getCategory()
+                );
+
+                item.put(
                         "averageExpense",
                         averageExpense
                 );
 
-                alert.put(
-                        "message",
-                        transaction.getDescription()
-                                + " spending of $"
-                                + transaction.getAmount()
-                                + " is much larger than your average transaction."
+                unusualTransactions.add(
+                        item
                 );
-
-                alerts.add(alert);
             }
         }
 
-        return alerts;
+        return unusualTransactions;
     }
 }

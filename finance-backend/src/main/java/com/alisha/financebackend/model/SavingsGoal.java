@@ -1,5 +1,6 @@
 package com.alisha.financebackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -21,18 +22,29 @@ public class SavingsGoal {
     private String name;
 
     @NotNull(message = "Target amount is required")
-    @DecimalMin(value = "0.01", message = "Target amount must be greater than 0")
+    @DecimalMin(
+            value = "0.01",
+            message = "Target amount must be greater than 0"
+    )
     @Column(nullable = false)
     private BigDecimal targetAmount;
 
     @NotNull(message = "Current amount is required")
-    @DecimalMin(value = "0.00", message = "Current amount cannot be negative")
+    @DecimalMin(
+            value = "0.00",
+            message = "Current amount cannot be negative"
+    )
     @Column(nullable = false)
     private BigDecimal currentAmount;
 
     @NotNull(message = "Target date is required")
     @Column(nullable = false)
     private LocalDate targetDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private AppUser user;
 
     public SavingsGoal() {
     }
@@ -69,6 +81,10 @@ public class SavingsGoal {
         return targetDate;
     }
 
+    public AppUser getUser() {
+        return user;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -87,5 +103,9 @@ public class SavingsGoal {
 
     public void setTargetDate(LocalDate targetDate) {
         this.targetDate = targetDate;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
     }
 }

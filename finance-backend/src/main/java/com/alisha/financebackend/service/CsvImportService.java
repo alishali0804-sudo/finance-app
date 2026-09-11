@@ -1,5 +1,6 @@
 package com.alisha.financebackend.service;
 
+import com.alisha.financebackend.model.AppUser;
 import com.alisha.financebackend.model.Transaction;
 import com.alisha.financebackend.model.TransactionType;
 import com.alisha.financebackend.repository.TransactionRepository;
@@ -19,84 +20,159 @@ public class CsvImportService {
 
     private final TransactionRepository transactionRepository;
     private final CategorisationService categorisationService;
+    private final CurrentUserService currentUserService;
 
     public CsvImportService(
             TransactionRepository transactionRepository,
-            CategorisationService categorisationService
+            CategorisationService categorisationService,
+            CurrentUserService currentUserService
     ) {
         this.transactionRepository = transactionRepository;
         this.categorisationService = categorisationService;
+        this.currentUserService = currentUserService;
     }
 
-    public List<Transaction> importCsv(MultipartFile file) {
+    public List<Transaction> importCsv(
+            MultipartFile file
+    ) {
 
-        List<Transaction> transactions = new ArrayList<>();
+        AppUser currentUser =
+                currentUserService.getCurrentUser();
 
-        DateTimeFormatter dateFormatter =
-                DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<Transaction> importedTransactions =
+                new ArrayList<>();
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern(
+                        "dd/MM/yyyy"
+                );
 
         try (
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(file.getInputStream())
-                )
+                BufferedReader reader =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        file.getInputStream()
+                                )
+                        )
         ) {
 
             String line;
 
-            // Skip header
-            reader.readLine();
+            boolean firstLine = true;
 
-            while ((line = reader.readLine()) != null) {
+            while (
+                    (line = reader.readLine())
+                            != null
+            ) {
 
-                String[] values = line.split(",");
+                if (firstLine) {
+                    firstLine = false;
+                    continue;
+                }
+
+                if (line.isBlank()) {
+                    continue;
+                }
+
+                String[] values =
+                        line.split(",");
 
                 if (values.length < 3) {
                     continue;
                 }
 
-                String dateText = values[0].trim();
-                String rawDescription = values[1].trim();
+                String dateValue =
+                        values[0].trim();
+
+                String rawDescription =
+                        values[1].trim();
+
+                String amountValue =
+                        values[2].trim();
+
+                LocalDate date =
+                        LocalDate.parse(
+                                dateValue,
+                                formatter
+                        );
 
                 BigDecimal rawAmount =
-                        new BigDecimal(values[2].trim());
+                        new BigDecimal(
+                                amountValue
+                        );
 
                 TransactionType type;
 
-                if (rawAmount.compareTo(BigDecimal.ZERO) < 0) {
-                    type = TransactionType.EXPENSE;
+                if (
+                        rawAmount.compareTo(
+                                BigDecimal.ZERO
+                        ) < 0
+                ) {
+                    type =
+                            TransactionType.EXPENSE;
                 } else {
-                    type = TransactionType.INCOME;
+                    type =
+                            TransactionType.INCOME;
                 }
 
-                BigDecimal amount = rawAmount.abs();
+                BigDecimal amount =
+                        rawAmount.abs();
 
                 String category =
-                        categorisationService.categorise(rawDescription);
+                        categorisationService
+                                .categorise(
+                                        rawDescription
+                                );
 
                 String merchant =
-                        categorisationService.extractMerchant(rawDescription);
+                        categorisationService
+                                .extractMerchant(
+                                        rawDescription
+                                );
 
-                Transaction transaction = new Transaction(
-                        merchant,
-                        amount,
-                        LocalDate.parse(dateText, dateFormatter),
-                        category,
-                        type
+                Transaction transaction =
+                        new Transaction(
+                                merchant,
+                                amount,
+                                date,
+                                category,
+                                type
+                        );
+
+                transaction.setRawDescription(
+                        rawDescription
                 );
 
-                transaction.setRawDescription(rawDescription);
-                transaction.setMerchant(merchant);
-                transaction.setSource("CSV_IMPORT");
+                transaction.setMerchant(
+                        merchant
+                );
 
-                transactions.add(transaction);
+                transaction.setSource(
+                        "CSV_IMPORT"
+                );
+
+                transaction.setUser(
+                        currentUser
+                );
+
+                Transaction savedTransaction =
+                        transactionRepository.save(
+                                transaction
+                        );
+
+                importedTransactions.add(
+                        savedTransaction
+                );
             }
-
-            return transactionRepository.saveAll(transactions);
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Failed to import CSV file: " + e.getMessage()
+                    "Failed to import CSV: "
+                            + e.getMessage(),
+                    e
             );
         }
+
+        return importedTransactions;
     }
 }

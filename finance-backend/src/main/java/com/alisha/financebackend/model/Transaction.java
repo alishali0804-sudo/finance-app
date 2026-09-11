@@ -1,5 +1,6 @@
 package com.alisha.financebackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +22,10 @@ public class Transaction {
     private String description;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    @DecimalMin(
+            value = "0.01",
+            message = "Amount must be greater than 0"
+    )
     @Column(nullable = false)
     private BigDecimal amount;
 
@@ -43,6 +47,11 @@ public class Transaction {
     private String merchant;
 
     private String source;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private AppUser user;
 
     public Transaction() {
     }
@@ -97,39 +106,65 @@ public class Transaction {
         return source;
     }
 
+    public AppUser getUser() {
+        return user;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(
+            String description
+    ) {
         this.description = description;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(
+            BigDecimal amount
+    ) {
         this.amount = amount;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(
+            LocalDate date
+    ) {
         this.date = date;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(
+            String category
+    ) {
         this.category = category;
     }
 
-    public void setType(TransactionType type) {
+    public void setType(
+            TransactionType type
+    ) {
         this.type = type;
     }
 
-    public void setRawDescription(String rawDescription) {
+    public void setRawDescription(
+            String rawDescription
+    ) {
         this.rawDescription = rawDescription;
     }
 
-    public void setMerchant(String merchant) {
+    public void setMerchant(
+            String merchant
+    ) {
         this.merchant = merchant;
     }
 
-    public void setSource(String source) {
+    public void setSource(
+            String source
+    ) {
         this.source = source;
+    }
+
+    public void setUser(
+            AppUser user
+    ) {
+        this.user = user;
     }
 }

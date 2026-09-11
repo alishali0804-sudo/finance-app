@@ -1,5 +1,6 @@
 package com.alisha.financebackend.service;
 
+import com.alisha.financebackend.model.AppUser;
 import com.alisha.financebackend.model.Transaction;
 import com.alisha.financebackend.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -9,42 +10,140 @@ import java.util.List;
 @Service
 public class TransactionService {
 
-    private final TransactionRepository transactionRepository;
+    private final TransactionRepository
+            transactionRepository;
 
-    public TransactionService(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
+    private final CurrentUserService
+            currentUserService;
+
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            CurrentUserService currentUserService
+    ) {
+        this.transactionRepository =
+                transactionRepository;
+
+        this.currentUserService =
+                currentUserService;
     }
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
+    public List<Transaction>
+    getAllTransactions() {
+
+        AppUser user =
+                currentUserService
+                        .getCurrentUser();
+
+        return transactionRepository
+                .findByUserOrderByDateDesc(
+                        user
+                );
     }
 
-    public Transaction createTransaction(Transaction transaction) {
-        return transactionRepository.save(transaction);
+    public Transaction createTransaction(
+            Transaction transaction
+    ) {
+
+        AppUser user =
+                currentUserService
+                        .getCurrentUser();
+
+        transaction.setUser(user);
+
+        return transactionRepository
+                .save(transaction);
     }
 
-    public Transaction getTransactionById(Long id) {
-        return transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+    public Transaction getTransactionById(
+            Long id
+    ) {
+
+        AppUser user =
+                currentUserService
+                        .getCurrentUser();
+
+        return transactionRepository
+                .findByIdAndUser(
+                        id,
+                        user
+                )
+                .orElseThrow(
+                        () -> new RuntimeException(
+                                "Transaction not found"
+                        )
+                );
     }
-    public Transaction updateTransaction(Long id, Transaction updatedTransaction) {
 
-        Transaction existingTransaction = getTransactionById(id);
+    public Transaction updateTransaction(
+            Long id,
+            Transaction updatedTransaction
+    ) {
 
-        existingTransaction.setDescription(updatedTransaction.getDescription());
-        existingTransaction.setAmount(updatedTransaction.getAmount());
-        existingTransaction.setDate(updatedTransaction.getDate());
-        existingTransaction.setCategory(updatedTransaction.getCategory());
-        existingTransaction.setType(updatedTransaction.getType());
+        AppUser user =
+                currentUserService
+                        .getCurrentUser();
 
-        return transactionRepository.save(existingTransaction);
+        Transaction existingTransaction =
+                transactionRepository
+                        .findByIdAndUser(
+                                id,
+                                user
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Transaction not found"
+                                        )
+                        );
+
+        existingTransaction.setDescription(
+                updatedTransaction.getDescription()
+        );
+
+        existingTransaction.setAmount(
+                updatedTransaction.getAmount()
+        );
+
+        existingTransaction.setDate(
+                updatedTransaction.getDate()
+        );
+
+        existingTransaction.setCategory(
+                updatedTransaction.getCategory()
+        );
+
+        existingTransaction.setType(
+                updatedTransaction.getType()
+        );
+
+        return transactionRepository.save(
+                existingTransaction
+        );
     }
-    public void deleteTransaction(Long id) {
 
-        if (!transactionRepository.existsById(id)) {
-            throw new RuntimeException("Transaction not found");
-        }
+    public void deleteTransaction(
+            Long id
+    ) {
 
-        transactionRepository.deleteById(id);
+        AppUser user =
+                currentUserService
+                        .getCurrentUser();
+
+        Transaction transaction =
+                transactionRepository
+                        .findByIdAndUser(
+                                id,
+                                user
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Transaction not found"
+                                        )
+                        );
+
+        transactionRepository.delete(
+                transaction
+        );
     }
 }

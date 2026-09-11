@@ -1,5 +1,6 @@
 package com.alisha.financebackend.service;
 
+import com.alisha.financebackend.model.AppUser;
 import com.alisha.financebackend.model.SavingsGoal;
 import com.alisha.financebackend.repository.SavingsGoalRepository;
 import com.openai.client.OpenAIClient;
@@ -18,18 +19,24 @@ public class AiCoachService {
     private final OpenAIClient openAIClient;
     private final AnalyticsService analyticsService;
     private final SavingsGoalRepository savingsGoalRepository;
+    private final CurrentUserService currentUserService;
 
     public AiCoachService(
             OpenAIClient openAIClient,
             AnalyticsService analyticsService,
-            SavingsGoalRepository savingsGoalRepository
+            SavingsGoalRepository savingsGoalRepository,
+            CurrentUserService currentUserService
     ) {
         this.openAIClient = openAIClient;
         this.analyticsService = analyticsService;
         this.savingsGoalRepository = savingsGoalRepository;
+        this.currentUserService = currentUserService;
     }
 
     public String askCoach(String question) {
+
+        AppUser currentUser =
+                currentUserService.getCurrentUser();
 
         Map<String, BigDecimal> summary =
                 analyticsService.getSummary();
@@ -47,7 +54,10 @@ public class AiCoachService {
                 analyticsService.getUnusualSpending();
 
         List<SavingsGoal> goals =
-                savingsGoalRepository.findAll();
+                savingsGoalRepository
+                        .findByUserOrderByTargetDateAsc(
+                                currentUser
+                        );
 
         String financialContext = """
                 You are an AI personal finance coach.
