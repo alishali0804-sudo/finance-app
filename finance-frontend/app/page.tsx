@@ -3,325 +3,369 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-    Bar,
     BarChart,
-    CartesianGrid,
-    Cell,
-    Legend,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
+    Bar,
     XAxis,
     YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Legend,
 } from "recharts";
 
-type Summary = {
+import AuthGuard from "@/components/AuthGuard";
+import LogoutButton from "@/components/LogoutButton";
+import {
+    authenticatedFetch,
+    getUser,
+} from "@/lib/auth";
+
+interface Summary {
     totalIncome: number;
     totalExpenses: number;
     netCashFlow: number;
-};
+}
 
-type CategorySpending = {
-    [category: string]: number;
-};
+interface CategoryData {
+    name: string;
+    value: number;
+}
 
-type MonthlySpending = {
-    [month: string]: number;
-};
+interface MonthlyData {
+    month: string;
+    amount: number;
+}
 
 export default function Home() {
-    const [summary, setSummary] = useState<Summary | null>(null);
-    const [categories, setCategories] = useState<CategorySpending>({});
-    const [monthly, setMonthly] = useState<MonthlySpending>({});
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(true);
+    const user = getUser();
+
+    const [summary, setSummary] =
+        useState<Summary>({
+            totalIncome: 0,
+            totalExpenses: 0,
+            netCashFlow: 0,
+        });
+
+    const [categoryData, setCategoryData] =
+        useState<CategoryData[]>([]);
+
+    const [monthlyData, setMonthlyData] =
+        useState<MonthlyData[]>([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
 
     useEffect(() => {
-        Promise.all([
-            fetch("http://localhost:8080/api/analytics/summary"),
-            fetch("http://localhost:8080/api/analytics/categories"),
-            fetch("http://localhost:8080/api/analytics/monthly"),
-        ])
-            .then(
-                async ([
-                           summaryResponse,
-                           categoryResponse,
-                           monthlyResponse,
-                       ]) => {
-                    if (
-                        !summaryResponse.ok ||
-                        !categoryResponse.ok ||
-                        !monthlyResponse.ok
-                    ) {
-                        throw new Error("Failed to load analytics");
-                    }
+        async function loadDashboard() {
+            try {
+                setLoading(true);
+                setError("");
 
-                    const summaryData =
-                        await summaryResponse.json();
+                const [
+                    summaryResponse,
+                    categoryResponse,
+                    monthlyResponse,
+                ] = await Promise.all([
+                    authenticatedFetch(
+                        "http://localhost:8080/api/analytics/summary"
+                    ),
 
-                    const categoryData =
-                        await categoryResponse.json();
+                    authenticatedFetch(
+                        "http://localhost:8080/api/analytics/categories"
+                    ),
 
-                    const monthlyData =
-                        await monthlyResponse.json();
+                    authenticatedFetch(
+                        "http://localhost:8080/api/analytics/monthly"
+                    ),
+                ]);
 
-                    setSummary(summaryData);
-                    setCategories(categoryData);
-                    setMonthly(monthlyData);
+                if (
+                    !summaryResponse.ok ||
+                    !categoryResponse.ok ||
+                    !monthlyResponse.ok
+                ) {
+                    throw new Error(
+                        "Failed to load dashboard data."
+                    );
                 }
-            )
-            .catch((error) => {
-                console.error(error);
+
+                const summaryJson =
+                    await summaryResponse.json();
+
+                const categoryJson =
+                    await categoryResponse.json();
+
+                const monthlyJson =
+                    await monthlyResponse.json();
+
+                setSummary(summaryJson);
+
+                const categories =
+                    Object.entries(categoryJson).map(
+                        ([name, value]) => ({
+                            name,
+                            value: Number(value),
+                        })
+                    );
+
+                setCategoryData(categories);
+
+                const months =
+                    Object.entries(monthlyJson).map(
+                        ([month, amount]) => ({
+                            month,
+                            amount: Number(amount),
+                        })
+                    );
+
+                setMonthlyData(months);
+            } catch (err) {
+                console.error(err);
+
                 setError(
                     "Could not load dashboard data."
                 );
-            })
-            .finally(() => {
+            } finally {
                 setLoading(false);
-            });
+            }
+        }
+
+        loadDashboard();
     }, []);
 
-    const categoryChartData =
-        Object.entries(categories).map(
-            ([category, amount]) => ({
-                name: category,
-                value: Number(amount),
-            })
-        );
-
-    const monthlyChartData =
-        Object.entries(monthly).map(
-            ([month, amount]) => ({
-                month,
-                spending: Number(amount),
-            })
-        );
-
-    const pieColours = [
-        "#2563eb",
-        "#16a34a",
-        "#dc2626",
-        "#9333ea",
-        "#f59e0b",
-        "#0891b2",
-        "#db2777",
-        "#64748b",
-    ];
+    const formatCurrency = (
+        value: number
+    ) => {
+        return new Intl.NumberFormat(
+            "en-AU",
+            {
+                style: "currency",
+                currency: "AUD",
+            }
+        ).format(value);
+    };
 
     return (
-        <main className="min-h-screen bg-gray-100">
-            <nav className="bg-white shadow-sm">
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
-                    <Link
-                        href="/"
-                        className="text-xl font-bold text-gray-900"
-                    >
-                        Finance Coach
-                    </Link>
-
-                    <div className="flex gap-6 text-sm text-gray-600">
+        <AuthGuard>
+            <main className="min-h-screen bg-gray-100">
+                <nav className="bg-white shadow-sm">
+                    <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
                         <Link
                             href="/"
-                            className="font-semibold text-gray-900"
+                            className="text-xl font-bold text-gray-900"
                         >
-                            Dashboard
+                            Finance Coach
                         </Link>
 
-                        <Link
-                            href="/transactions"
-                            className="transition hover:text-gray-900"
-                        >
-                            Transactions
-                        </Link>
+                        <div className="flex items-center gap-6 text-sm text-gray-600">
+                            <Link
+                                href="/"
+                                className="font-semibold text-gray-900"
+                            >
+                                Dashboard
+                            </Link>
 
-                        <Link
-                            href="/goals"
-                            className="transition hover:text-gray-900"
-                        >
-                            Goals
-                        </Link>
+                            <Link href="/transactions">
+                                Transactions
+                            </Link>
 
-                        <Link
-                            href="/import"
-                            className="transition hover:text-gray-900"
-                        >
-                            Import
-                        </Link>
-                    </div>
-                </div>
-            </nav>
+                            <Link href="/goals">
+                                Goals
+                            </Link>
 
-            <div className="mx-auto max-w-6xl p-8">
-                <h2 className="mb-2 text-3xl font-bold text-gray-900">
-                    Personal Finance Dashboard
-                </h2>
+                            <Link href="/import">
+                                Import
+                            </Link>
 
-                <p className="mb-8 text-gray-600">
-                    Track your income, expenses and spending patterns.
-                </p>
+                            <Link href="/coach">
+                                AI Coach
+                            </Link>
 
-                {loading && (
-                    <p className="text-gray-600">
-                        Loading dashboard...
-                    </p>
-                )}
-
-                {error && (
-                    <div className="mb-6 rounded-lg bg-red-100 p-4 text-red-700">
-                        {error}
-                    </div>
-                )}
-
-                {summary && (
-                    <div className="mb-8 grid gap-6 md:grid-cols-3">
-                        <div className="rounded-xl bg-white p-6 shadow">
-                            <p className="text-sm text-gray-500">
-                                Total Income
-                            </p>
-
-                            <p className="mt-2 text-3xl font-bold text-green-600">
-                                $
-                                {Number(
-                                    summary.totalIncome
-                                ).toFixed(2)}
-                            </p>
-                        </div>
-
-                        <div className="rounded-xl bg-white p-6 shadow">
-                            <p className="text-sm text-gray-500">
-                                Total Expenses
-                            </p>
-
-                            <p className="mt-2 text-3xl font-bold text-red-600">
-                                $
-                                {Number(
-                                    summary.totalExpenses
-                                ).toFixed(2)}
-                            </p>
-                        </div>
-
-                        <div className="rounded-xl bg-white p-6 shadow">
-                            <p className="text-sm text-gray-500">
-                                Net Cash Flow
-                            </p>
-
-                            <p className="mt-2 text-3xl font-bold text-blue-600">
-                                $
-                                {Number(
-                                    summary.netCashFlow
-                                ).toFixed(2)}
-                            </p>
+                            <LogoutButton />
                         </div>
                     </div>
-                )}
+                </nav>
 
-                <div className="grid gap-8 md:grid-cols-2">
-                    <section className="rounded-xl bg-white p-6 shadow">
-                        <h3 className="mb-4 text-xl font-bold text-gray-900">
-                            Spending by Category
-                        </h3>
+                <div className="mx-auto max-w-6xl p-8">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Welcome
+                            {user
+                                ? `, ${user.name}`
+                                : ""}
+                        </h1>
 
-                        {categoryChartData.length === 0 &&
-                        !loading ? (
-                            <p className="text-gray-500">
-                                No category data available.
+                        <p className="mt-2 text-gray-600">
+                            Here is an overview of your
+                            finances.
+                        </p>
+                    </div>
+
+                    {loading && (
+                        <div className="rounded-xl bg-white p-6 shadow">
+                            <p className="text-gray-600">
+                                Loading dashboard...
                             </p>
-                        ) : (
-                            <div className="h-80">
-                                <ResponsiveContainer
-                                    width="100%"
-                                    height="100%"
-                                >
-                                    <PieChart>
-                                        <Pie
-                                            data={categoryChartData}
-                                            dataKey="value"
-                                            nameKey="name"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={100}
-                                            label
-                                        >
-                                            {categoryChartData.map(
-                                                (entry, index) => (
-                                                    <Cell
-                                                        key={`${entry.name}-${index}`}
-                                                        fill={
-                                                            pieColours[
-                                                            index %
-                                                            pieColours.length
-                                                                ]
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+                            {error}
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <>
+                            <section className="mb-8 grid gap-6 md:grid-cols-3">
+                                <div className="rounded-xl bg-white p-6 shadow">
+                                    <p className="text-sm font-medium text-gray-500">
+                                        Total Income
+                                    </p>
+
+                                    <p className="mt-2 text-2xl font-bold text-gray-900">
+                                        {formatCurrency(
+                                            summary.totalIncome
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl bg-white p-6 shadow">
+                                    <p className="text-sm font-medium text-gray-500">
+                                        Total Expenses
+                                    </p>
+
+                                    <p className="mt-2 text-2xl font-bold text-gray-900">
+                                        {formatCurrency(
+                                            summary.totalExpenses
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl bg-white p-6 shadow">
+                                    <p className="text-sm font-medium text-gray-500">
+                                        Net Cash Flow
+                                    </p>
+
+                                    <p className="mt-2 text-2xl font-bold text-gray-900">
+                                        {formatCurrency(
+                                            summary.netCashFlow
+                                        )}
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section className="grid gap-6 lg:grid-cols-2">
+                                <div className="rounded-xl bg-white p-6 shadow">
+                                    <h2 className="mb-4 text-xl font-bold text-gray-900">
+                                        Spending by Category
+                                    </h2>
+
+                                    {categoryData.length === 0 ? (
+                                        <p className="text-gray-500">
+                                            No spending data yet.
+                                        </p>
+                                    ) : (
+                                        <div className="h-80">
+                                            <ResponsiveContainer
+                                                width="100%"
+                                                height="100%"
+                                            >
+                                                <PieChart>
+                                                    <Pie
+                                                        data={categoryData}
+                                                        dataKey="value"
+                                                        nameKey="name"
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        outerRadius={100}
+                                                        label
+                                                    >
+                                                        {categoryData.map(
+                                                            (_, index) => (
+                                                                <Cell
+                                                                    key={`cell-${index}`}
+                                                                />
+                                                            )
+                                                        )}
+                                                    </Pie>
+
+                                                    <Tooltip
+                                                        formatter={(
+                                                            value
+                                                        ) =>
+                                                            formatCurrency(
+                                                                Number(value)
+                                                            )
                                                         }
                                                     />
-                                                )
-                                            )}
-                                        </Pie>
 
-                                        <Tooltip
-                                            formatter={(value) =>
-                                                `$${Number(
-                                                    value
-                                                ).toFixed(2)}`
-                                            }
-                                        />
+                                                    <Legend />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    )}
+                                </div>
 
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </section>
+                                <div className="rounded-xl bg-white p-6 shadow">
+                                    <h2 className="mb-4 text-xl font-bold text-gray-900">
+                                        Monthly Spending
+                                    </h2>
 
-                    <section className="rounded-xl bg-white p-6 shadow">
-                        <h3 className="mb-4 text-xl font-bold text-gray-900">
-                            Monthly Spending
-                        </h3>
+                                    {monthlyData.length === 0 ? (
+                                        <p className="text-gray-500">
+                                            No monthly spending
+                                            data yet.
+                                        </p>
+                                    ) : (
+                                        <div className="h-80">
+                                            <ResponsiveContainer
+                                                width="100%"
+                                                height="100%"
+                                            >
+                                                <BarChart
+                                                    data={monthlyData}
+                                                >
+                                                    <CartesianGrid
+                                                        strokeDasharray="3 3"
+                                                    />
 
-                        {monthlyChartData.length === 0 &&
-                        !loading ? (
-                            <p className="text-gray-500">
-                                No monthly data available.
-                            </p>
-                        ) : (
-                            <div className="h-80">
-                                <ResponsiveContainer
-                                    width="100%"
-                                    height="100%"
-                                >
-                                    <BarChart
-                                        data={monthlyChartData}
-                                    >
-                                        <CartesianGrid
-                                            strokeDasharray="3 3"
-                                        />
+                                                    <XAxis
+                                                        dataKey="month"
+                                                    />
 
-                                        <XAxis dataKey="month" />
+                                                    <YAxis />
 
-                                        <YAxis />
+                                                    <Tooltip
+                                                        formatter={(
+                                                            value
+                                                        ) =>
+                                                            formatCurrency(
+                                                                Number(value)
+                                                            )
+                                                        }
+                                                    />
 
-                                        <Tooltip
-                                            formatter={(value) =>
-                                                `$${Number(
-                                                    value
-                                                ).toFixed(2)}`
-                                            }
-                                        />
-
-                                        <Legend />
-
-                                        <Bar
-                                            dataKey="spending"
-                                            name="Spending"
-                                            fill="#2563eb"
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </section>
+                                                    <Bar
+                                                        dataKey="amount"
+                                                        name="Spending"
+                                                    />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        </>
+                    )}
                 </div>
-            </div>
-        </main>
+            </main>
+        </AuthGuard>
     );
 }
