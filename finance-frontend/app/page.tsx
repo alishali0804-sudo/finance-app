@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 type Summary = {
     totalIncome: number;
@@ -55,6 +68,31 @@ export default function Home() {
             });
     }, []);
 
+    const categoryChartData = Object.entries(categories).map(
+        ([category, amount]) => ({
+            name: category,
+            value: Number(amount),
+        })
+    );
+
+    const monthlyChartData = Object.entries(monthly).map(
+        ([month, amount]) => ({
+            month,
+            spending: Number(amount),
+        })
+    );
+
+    const pieColours = [
+        "#2563eb",
+        "#16a34a",
+        "#dc2626",
+        "#9333ea",
+        "#f59e0b",
+        "#0891b2",
+        "#db2777",
+        "#64748b",
+    ];
+
     return (
         <main className="min-h-screen bg-gray-100">
             <nav className="bg-white shadow-sm">
@@ -64,7 +102,9 @@ export default function Home() {
                     </h1>
 
                     <div className="flex gap-6 text-sm text-gray-600">
-                        <span className="font-semibold text-gray-900">Dashboard</span>
+            <span className="font-semibold text-gray-900">
+              Dashboard
+            </span>
                         <span>Transactions</span>
                         <span>Goals</span>
                         <span>Import</span>
@@ -133,26 +173,44 @@ export default function Home() {
                             Spending by Category
                         </h3>
 
-                        {Object.keys(categories).length === 0 && !loading ? (
+                        {categoryChartData.length === 0 && !loading ? (
                             <p className="text-gray-500">
                                 No category data available.
                             </p>
                         ) : (
-                            <div className="space-y-3">
-                                {Object.entries(categories).map(([category, amount]) => (
-                                    <div
-                                        key={category}
-                                        className="flex items-center justify-between border-b border-gray-100 pb-3"
-                                    >
-                    <span className="text-gray-700">
-                      {category}
-                    </span>
+                            <div className="h-80">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={categoryChartData}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            label
+                                        >
+                                            {categoryChartData.map((entry, index) => (
+                                                <Cell
+                                                    key={`${entry.name}-${index}`}
+                                                    fill={
+                                                        pieColours[
+                                                        index % pieColours.length
+                                                            ]
+                                                    }
+                                                />
+                                            ))}
+                                        </Pie>
 
-                                        <span className="font-semibold text-gray-900">
-                      ${Number(amount).toFixed(2)}
-                    </span>
-                                    </div>
-                                ))}
+                                        <Tooltip
+                                            formatter={(value) =>
+                                                `$${Number(value).toFixed(2)}`
+                                            }
+                                        />
+
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
                             </div>
                         )}
                     </section>
@@ -162,26 +220,35 @@ export default function Home() {
                             Monthly Spending
                         </h3>
 
-                        {Object.keys(monthly).length === 0 && !loading ? (
+                        {monthlyChartData.length === 0 && !loading ? (
                             <p className="text-gray-500">
                                 No monthly data available.
                             </p>
                         ) : (
-                            <div className="space-y-3">
-                                {Object.entries(monthly).map(([month, amount]) => (
-                                    <div
-                                        key={month}
-                                        className="flex items-center justify-between border-b border-gray-100 pb-3"
-                                    >
-                    <span className="text-gray-700">
-                      {month}
-                    </span>
+                            <div className="h-80">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={monthlyChartData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
 
-                                        <span className="font-semibold text-gray-900">
-                      ${Number(amount).toFixed(2)}
-                    </span>
-                                    </div>
-                                ))}
+                                        <XAxis dataKey="month" />
+
+                                        <YAxis />
+
+                                        <Tooltip
+                                            formatter={(value) =>
+                                                `$${Number(value).toFixed(2)}`
+                                            }
+                                        />
+
+                                        <Legend />
+
+                                        <Bar
+                                            dataKey="spending"
+                                            name="Spending"
+                                            fill="#2563eb"
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                         )}
                     </section>
