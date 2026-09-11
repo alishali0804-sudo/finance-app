@@ -68,7 +68,8 @@ export default function GoalsPage() {
                 );
 
                 if (progressResponse.ok) {
-                    const progress = await progressResponse.json();
+                    const progress: GoalProgress =
+                        await progressResponse.json();
 
                     progressResults[goal.id] = progress;
                 }
@@ -171,11 +172,17 @@ export default function GoalsPage() {
                     </Link>
 
                     <div className="flex gap-6 text-sm text-gray-600">
-                        <Link href="/">
+                        <Link
+                            href="/"
+                            className="transition hover:text-gray-900"
+                        >
                             Dashboard
                         </Link>
 
-                        <Link href="/transactions">
+                        <Link
+                            href="/transactions"
+                            className="transition hover:text-gray-900"
+                        >
                             Transactions
                         </Link>
 
@@ -186,9 +193,12 @@ export default function GoalsPage() {
                             Goals
                         </Link>
 
-                        <span>
-              Import
-            </span>
+                        <Link
+                            href="/import"
+                            className="transition hover:text-gray-900"
+                        >
+                            Import
+                        </Link>
                     </div>
                 </div>
             </nav>

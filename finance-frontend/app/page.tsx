@@ -57,9 +57,14 @@ export default function Home() {
                         throw new Error("Failed to load analytics");
                     }
 
-                    const summaryData = await summaryResponse.json();
-                    const categoryData = await categoryResponse.json();
-                    const monthlyData = await monthlyResponse.json();
+                    const summaryData =
+                        await summaryResponse.json();
+
+                    const categoryData =
+                        await categoryResponse.json();
+
+                    const monthlyData =
+                        await monthlyResponse.json();
 
                     setSummary(summaryData);
                     setCategories(categoryData);
@@ -68,26 +73,30 @@ export default function Home() {
             )
             .catch((error) => {
                 console.error(error);
-                setError("Could not load dashboard data.");
+                setError(
+                    "Could not load dashboard data."
+                );
             })
             .finally(() => {
                 setLoading(false);
             });
     }, []);
 
-    const categoryChartData = Object.entries(categories).map(
-        ([category, amount]) => ({
-            name: category,
-            value: Number(amount),
-        })
-    );
+    const categoryChartData =
+        Object.entries(categories).map(
+            ([category, amount]) => ({
+                name: category,
+                value: Number(amount),
+            })
+        );
 
-    const monthlyChartData = Object.entries(monthly).map(
-        ([month, amount]) => ({
-            month,
-            spending: Number(amount),
-        })
-    );
+    const monthlyChartData =
+        Object.entries(monthly).map(
+            ([month, amount]) => ({
+                month,
+                spending: Number(amount),
+            })
+        );
 
     const pieColours = [
         "#2563eb",
@@ -133,9 +142,12 @@ export default function Home() {
                             Goals
                         </Link>
 
-                        <span className="cursor-default">
-              Import
-            </span>
+                        <Link
+                            href="/import"
+                            className="transition hover:text-gray-900"
+                        >
+                            Import
+                        </Link>
                     </div>
                 </div>
             </nav>
@@ -169,7 +181,10 @@ export default function Home() {
                             </p>
 
                             <p className="mt-2 text-3xl font-bold text-green-600">
-                                ${Number(summary.totalIncome).toFixed(2)}
+                                $
+                                {Number(
+                                    summary.totalIncome
+                                ).toFixed(2)}
                             </p>
                         </div>
 
@@ -179,7 +194,10 @@ export default function Home() {
                             </p>
 
                             <p className="mt-2 text-3xl font-bold text-red-600">
-                                ${Number(summary.totalExpenses).toFixed(2)}
+                                $
+                                {Number(
+                                    summary.totalExpenses
+                                ).toFixed(2)}
                             </p>
                         </div>
 
@@ -189,7 +207,10 @@ export default function Home() {
                             </p>
 
                             <p className="mt-2 text-3xl font-bold text-blue-600">
-                                ${Number(summary.netCashFlow).toFixed(2)}
+                                $
+                                {Number(
+                                    summary.netCashFlow
+                                ).toFixed(2)}
                             </p>
                         </div>
                     </div>
@@ -201,7 +222,8 @@ export default function Home() {
                             Spending by Category
                         </h3>
 
-                        {categoryChartData.length === 0 && !loading ? (
+                        {categoryChartData.length === 0 &&
+                        !loading ? (
                             <p className="text-gray-500">
                                 No category data available.
                             </p>
@@ -227,7 +249,8 @@ export default function Home() {
                                                         key={`${entry.name}-${index}`}
                                                         fill={
                                                             pieColours[
-                                                            index % pieColours.length
+                                                            index %
+                                                            pieColours.length
                                                                 ]
                                                         }
                                                     />
@@ -237,7 +260,9 @@ export default function Home() {
 
                                         <Tooltip
                                             formatter={(value) =>
-                                                `$${Number(value).toFixed(2)}`
+                                                `$${Number(
+                                                    value
+                                                ).toFixed(2)}`
                                             }
                                         />
 
@@ -253,7 +278,8 @@ export default function Home() {
                             Monthly Spending
                         </h3>
 
-                        {monthlyChartData.length === 0 && !loading ? (
+                        {monthlyChartData.length === 0 &&
+                        !loading ? (
                             <p className="text-gray-500">
                                 No monthly data available.
                             </p>
@@ -263,8 +289,12 @@ export default function Home() {
                                     width="100%"
                                     height="100%"
                                 >
-                                    <BarChart data={monthlyChartData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
+                                    <BarChart
+                                        data={monthlyChartData}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                        />
 
                                         <XAxis dataKey="month" />
 
@@ -272,7 +302,9 @@ export default function Home() {
 
                                         <Tooltip
                                             formatter={(value) =>
-                                                `$${Number(value).toFixed(2)}`
+                                                `$${Number(
+                                                    value
+                                                ).toFixed(2)}`
                                             }
                                         />
 

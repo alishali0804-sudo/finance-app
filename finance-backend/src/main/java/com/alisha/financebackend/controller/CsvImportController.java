@@ -9,11 +9,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CsvImportController {
 
     private final CsvImportService csvImportService;
 
-    public CsvImportController(CsvImportService csvImportService) {
+    public CsvImportController(
+            CsvImportService csvImportService
+    ) {
         this.csvImportService = csvImportService;
     }
 

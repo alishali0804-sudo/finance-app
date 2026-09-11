@@ -23,19 +23,26 @@ type TransactionForm = {
 };
 
 export default function TransactionsPage() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [transactions, setTransactions] =
+        useState<Transaction[]>([]);
 
-    const [form, setForm] = useState<TransactionForm>({
-        description: "",
-        amount: "",
-        date: "",
-        category: "",
-        type: "EXPENSE",
-    });
+    const [form, setForm] =
+        useState<TransactionForm>({
+            description: "",
+            amount: "",
+            date: "",
+            category: "",
+            type: "EXPENSE",
+        });
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    const [submitting, setSubmitting] =
+        useState(false);
 
     const fetchTransactions = async () => {
         try {
@@ -46,7 +53,9 @@ export default function TransactionsPage() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to load transactions");
+                throw new Error(
+                    "Failed to load transactions"
+                );
             }
 
             const data = await response.json();
@@ -55,7 +64,9 @@ export default function TransactionsPage() {
             setError("");
         } catch (err) {
             console.error(err);
-            setError("Could not load transactions.");
+            setError(
+                "Could not load transactions."
+            );
         } finally {
             setLoading(false);
         }
@@ -65,7 +76,9 @@ export default function TransactionsPage() {
         fetchTransactions();
     }, []);
 
-    const handleSubmit = async (event: FormEvent) => {
+    const handleSubmit = async (
+        event: FormEvent
+    ) => {
         event.preventDefault();
 
         try {
@@ -77,11 +90,14 @@ export default function TransactionsPage() {
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
+                        "Content-Type":
+                            "application/json",
                     },
                     body: JSON.stringify({
-                        description: form.description,
-                        amount: Number(form.amount),
+                        description:
+                        form.description,
+                        amount:
+                            Number(form.amount),
                         date: form.date,
                         category: form.category,
                         type: form.type,
@@ -90,7 +106,9 @@ export default function TransactionsPage() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to create transaction");
+                throw new Error(
+                    "Failed to create transaction"
+                );
             }
 
             setForm({
@@ -104,16 +122,21 @@ export default function TransactionsPage() {
             await fetchTransactions();
         } catch (err) {
             console.error(err);
-            setError("Could not create transaction.");
+            setError(
+                "Could not create transaction."
+            );
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleDelete = async (id: number) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this transaction?"
-        );
+    const handleDelete = async (
+        id: number
+    ) => {
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to delete this transaction?"
+            );
 
         if (!confirmed) {
             return;
@@ -128,13 +151,17 @@ export default function TransactionsPage() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to delete transaction");
+                throw new Error(
+                    "Failed to delete transaction"
+                );
             }
 
             await fetchTransactions();
         } catch (err) {
             console.error(err);
-            setError("Could not delete transaction.");
+            setError(
+                "Could not delete transaction."
+            );
         }
     };
 
@@ -142,9 +169,12 @@ export default function TransactionsPage() {
         <main className="min-h-screen bg-gray-100">
             <nav className="bg-white shadow-sm">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
-                    <h1 className="text-xl font-bold text-gray-900">
+                    <Link
+                        href="/"
+                        className="text-xl font-bold text-gray-900"
+                    >
                         Finance Coach
-                    </h1>
+                    </Link>
 
                     <div className="flex gap-6 text-sm text-gray-600">
                         <Link href="/">
@@ -158,8 +188,13 @@ export default function TransactionsPage() {
                             Transactions
                         </Link>
 
-                        <span>Goals</span>
-                        <span>Import</span>
+                        <Link href="/goals">
+                            Goals
+                        </Link>
+
+                        <Link href="/import">
+                            Import
+                        </Link>
                     </div>
                 </div>
             </nav>
@@ -196,11 +231,14 @@ export default function TransactionsPage() {
                             <input
                                 type="text"
                                 required
-                                value={form.description}
+                                value={
+                                    form.description
+                                }
                                 onChange={(event) =>
                                     setForm({
                                         ...form,
-                                        description: event.target.value,
+                                        description:
+                                        event.target.value,
                                     })
                                 }
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
@@ -222,7 +260,8 @@ export default function TransactionsPage() {
                                 onChange={(event) =>
                                     setForm({
                                         ...form,
-                                        amount: event.target.value,
+                                        amount:
+                                        event.target.value,
                                     })
                                 }
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
@@ -242,7 +281,8 @@ export default function TransactionsPage() {
                                 onChange={(event) =>
                                     setForm({
                                         ...form,
-                                        date: event.target.value,
+                                        date:
+                                        event.target.value,
                                     })
                                 }
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
@@ -260,7 +300,8 @@ export default function TransactionsPage() {
                                 onChange={(event) =>
                                     setForm({
                                         ...form,
-                                        category: event.target.value,
+                                        category:
+                                        event.target.value,
                                     })
                                 }
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
@@ -268,27 +309,35 @@ export default function TransactionsPage() {
                                 <option value="">
                                     Select category
                                 </option>
+
                                 <option value="Groceries">
                                     Groceries
                                 </option>
+
                                 <option value="Dining">
                                     Dining
                                 </option>
+
                                 <option value="Transport">
                                     Transport
                                 </option>
+
                                 <option value="Entertainment">
                                     Entertainment
                                 </option>
+
                                 <option value="Bills">
                                     Bills
                                 </option>
+
                                 <option value="Shopping">
                                     Shopping
                                 </option>
+
                                 <option value="Income">
                                     Income
                                 </option>
+
                                 <option value="Other">
                                     Other
                                 </option>
@@ -305,9 +354,11 @@ export default function TransactionsPage() {
                                 onChange={(event) =>
                                     setForm({
                                         ...form,
-                                        type: event.target.value as
-                                            | "INCOME"
-                                            | "EXPENSE",
+                                        type:
+                                            event.target
+                                                .value as
+                                                | "INCOME"
+                                                | "EXPENSE",
                                     })
                                 }
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
@@ -345,7 +396,8 @@ export default function TransactionsPage() {
                         <p className="text-gray-600">
                             Loading transactions...
                         </p>
-                    ) : transactions.length === 0 ? (
+                    ) : transactions.length ===
+                    0 ? (
                         <p className="text-gray-600">
                             No transactions found.
                         </p>
@@ -357,18 +409,23 @@ export default function TransactionsPage() {
                                     <th className="pb-3">
                                         Date
                                     </th>
+
                                     <th className="pb-3">
                                         Description
                                     </th>
+
                                     <th className="pb-3">
                                         Category
                                     </th>
+
                                     <th className="pb-3">
                                         Type
                                     </th>
+
                                     <th className="pb-3 text-right">
                                         Amount
                                     </th>
+
                                     <th className="pb-3 text-right">
                                         Action
                                     </th>
@@ -376,60 +433,80 @@ export default function TransactionsPage() {
                                 </thead>
 
                                 <tbody>
-                                {transactions.map((transaction) => (
-                                    <tr
-                                        key={transaction.id}
-                                        className="border-b border-gray-100"
-                                    >
-                                        <td className="py-4 text-gray-600">
-                                            {transaction.date}
-                                        </td>
-
-                                        <td className="py-4 font-medium text-gray-900">
-                                            {transaction.description}
-                                        </td>
-
-                                        <td className="py-4 text-gray-600">
-                                            {transaction.category}
-                                        </td>
-
-                                        <td className="py-4">
-                        <span
-                            className={
-                                transaction.type === "INCOME"
-                                    ? "rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
-                                    : "rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700"
-                            }
-                        >
-                          {transaction.type}
-                        </span>
-                                        </td>
-
-                                        <td
-                                            className={
-                                                transaction.type === "INCOME"
-                                                    ? "py-4 text-right font-semibold text-green-600"
-                                                    : "py-4 text-right font-semibold text-red-600"
+                                {transactions.map(
+                                    (transaction) => (
+                                        <tr
+                                            key={
+                                                transaction.id
                                             }
+                                            className="border-b border-gray-100"
                                         >
-                                            {transaction.type === "INCOME"
-                                                ? "+"
-                                                : "-"}
-                                            ${Number(transaction.amount).toFixed(2)}
-                                        </td>
-
-                                        <td className="py-4 text-right">
-                                            <button
-                                                onClick={() =>
-                                                    handleDelete(transaction.id)
+                                            <td className="py-4 text-gray-600">
+                                                {
+                                                    transaction.date
                                                 }
-                                                className="text-sm font-medium text-red-600 hover:text-red-800"
+                                            </td>
+
+                                            <td className="py-4 font-medium text-gray-900">
+                                                {
+                                                    transaction.description
+                                                }
+                                            </td>
+
+                                            <td className="py-4 text-gray-600">
+                                                {
+                                                    transaction.category
+                                                }
+                                            </td>
+
+                                            <td className="py-4">
+                          <span
+                              className={
+                                  transaction.type ===
+                                  "INCOME"
+                                      ? "rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
+                                      : "rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700"
+                              }
+                          >
+                            {
+                                transaction.type
+                            }
+                          </span>
+                                            </td>
+
+                                            <td
+                                                className={
+                                                    transaction.type ===
+                                                    "INCOME"
+                                                        ? "py-4 text-right font-semibold text-green-600"
+                                                        : "py-4 text-right font-semibold text-red-600"
+                                                }
                                             >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                {transaction.type ===
+                                                "INCOME"
+                                                    ? "+"
+                                                    : "-"}
+                                                $
+                                                {Number(
+                                                    transaction.amount
+                                                ).toFixed(2)}
+                                            </td>
+
+                                            <td className="py-4 text-right">
+                                                <button
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            transaction.id
+                                                        )
+                                                    }
+                                                    className="text-sm font-medium text-red-600 hover:text-red-800"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )
+                                )}
                                 </tbody>
                             </table>
                         </div>
