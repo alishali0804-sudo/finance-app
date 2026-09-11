@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
     Bar,
@@ -42,23 +43,29 @@ export default function Home() {
             fetch("http://localhost:8080/api/analytics/categories"),
             fetch("http://localhost:8080/api/analytics/monthly"),
         ])
-            .then(async ([summaryResponse, categoryResponse, monthlyResponse]) => {
-                if (
-                    !summaryResponse.ok ||
-                    !categoryResponse.ok ||
-                    !monthlyResponse.ok
-                ) {
-                    throw new Error("Failed to load analytics");
+            .then(
+                async ([
+                           summaryResponse,
+                           categoryResponse,
+                           monthlyResponse,
+                       ]) => {
+                    if (
+                        !summaryResponse.ok ||
+                        !categoryResponse.ok ||
+                        !monthlyResponse.ok
+                    ) {
+                        throw new Error("Failed to load analytics");
+                    }
+
+                    const summaryData = await summaryResponse.json();
+                    const categoryData = await categoryResponse.json();
+                    const monthlyData = await monthlyResponse.json();
+
+                    setSummary(summaryData);
+                    setCategories(categoryData);
+                    setMonthly(monthlyData);
                 }
-
-                const summaryData = await summaryResponse.json();
-                const categoryData = await categoryResponse.json();
-                const monthlyData = await monthlyResponse.json();
-
-                setSummary(summaryData);
-                setCategories(categoryData);
-                setMonthly(monthlyData);
-            })
+            )
             .catch((error) => {
                 console.error(error);
                 setError("Could not load dashboard data.");
@@ -97,17 +104,35 @@ export default function Home() {
         <main className="min-h-screen bg-gray-100">
             <nav className="bg-white shadow-sm">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
-                    <h1 className="text-xl font-bold text-gray-900">
+                    <Link
+                        href="/"
+                        className="text-xl font-bold text-gray-900"
+                    >
                         Finance Coach
-                    </h1>
+                    </Link>
 
                     <div className="flex gap-6 text-sm text-gray-600">
-            <span className="font-semibold text-gray-900">
-              Dashboard
+                        <Link
+                            href="/"
+                            className="font-semibold text-gray-900"
+                        >
+                            Dashboard
+                        </Link>
+
+                        <Link
+                            href="/transactions"
+                            className="transition hover:text-gray-900"
+                        >
+                            Transactions
+                        </Link>
+
+                        <span className="cursor-default">
+              Goals
             </span>
-                        <span>Transactions</span>
-                        <span>Goals</span>
-                        <span>Import</span>
+
+                        <span className="cursor-default">
+              Import
+            </span>
                     </div>
                 </div>
             </nav>
@@ -179,7 +204,10 @@ export default function Home() {
                             </p>
                         ) : (
                             <div className="h-80">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
+                                >
                                     <PieChart>
                                         <Pie
                                             data={categoryChartData}
@@ -190,16 +218,18 @@ export default function Home() {
                                             outerRadius={100}
                                             label
                                         >
-                                            {categoryChartData.map((entry, index) => (
-                                                <Cell
-                                                    key={`${entry.name}-${index}`}
-                                                    fill={
-                                                        pieColours[
-                                                        index % pieColours.length
-                                                            ]
-                                                    }
-                                                />
-                                            ))}
+                                            {categoryChartData.map(
+                                                (entry, index) => (
+                                                    <Cell
+                                                        key={`${entry.name}-${index}`}
+                                                        fill={
+                                                            pieColours[
+                                                            index % pieColours.length
+                                                                ]
+                                                        }
+                                                    />
+                                                )
+                                            )}
                                         </Pie>
 
                                         <Tooltip
@@ -226,7 +256,10 @@ export default function Home() {
                             </p>
                         ) : (
                             <div className="h-80">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
+                                >
                                     <BarChart data={monthlyChartData}>
                                         <CartesianGrid strokeDasharray="3 3" />
 
