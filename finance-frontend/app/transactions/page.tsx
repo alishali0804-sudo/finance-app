@@ -212,12 +212,12 @@ export default function TransactionsPage() {
                                 Transactions
                             </Link>
 
-                            <Link href="/goals">
-                                Goals
-                            </Link>
-
                             <Link href="/import">
                                 Import
+                            </Link>
+
+                            <Link href="/goals">
+                                Goals
                             </Link>
 
                             <Link href="/coach">
@@ -236,8 +236,7 @@ export default function TransactionsPage() {
                         </h1>
 
                         <p className="mt-2 text-gray-600">
-                            Add and review your
-                            transactions.
+                            Add and review your transactions.
                         </p>
                     </div>
 
@@ -319,8 +318,7 @@ export default function TransactionsPage() {
                                     Category
                                 </label>
 
-                                <input
-                                    type="text"
+                                <select
                                     required
                                     value={category}
                                     onChange={(event) =>
@@ -329,8 +327,39 @@ export default function TransactionsPage() {
                                         )
                                     }
                                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900"
-                                    placeholder="Groceries"
-                                />
+                                >
+                                    <option value="">
+                                        Select category
+                                    </option>
+
+                                    <option value="Groceries">
+                                        Groceries
+                                    </option>
+
+                                    <option value="Transport">
+                                        Transport
+                                    </option>
+
+                                    <option value="Dining">
+                                        Dining
+                                    </option>
+
+                                    <option value="Entertainment">
+                                        Entertainment
+                                    </option>
+
+                                    <option value="Bills">
+                                        Bills
+                                    </option>
+
+                                    <option value="Income">
+                                        Income
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+                                </select>
                             </div>
 
                             <div>
@@ -363,7 +392,7 @@ export default function TransactionsPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="w-full rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {submitting
                                         ? "Adding..."

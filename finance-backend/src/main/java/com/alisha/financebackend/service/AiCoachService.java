@@ -73,6 +73,19 @@ public class AiCoachService {
 
                 Give clear, concise and practical responses.
 
+                RESPONSE FORMAT RULES:
+                - Use plain text only.
+                - Do not use Markdown.
+                - Do not use asterisks for bold text.
+                - Do not use double asterisks.
+                - Do not use underscores for formatting.
+                - Do not use em dashes.
+                - Do not use en dashes.
+                - Use normal hyphens instead.
+                - Keep formatting simple and easy to read.
+                - If listing items, use simple hyphen bullet points.
+                - Do not use headings with Markdown symbols.
+
                 You may:
                 - explain spending patterns
                 - identify important categories
@@ -128,17 +141,29 @@ public class AiCoachService {
                         .completions()
                         .create(params);
 
-        return completion
-                .choices()
-                .stream()
-                .flatMap(choice ->
-                        choice.message()
-                                .content()
-                                .stream()
-                )
-                .findFirst()
-                .orElse(
-                        "I could not generate a response."
-                );
+        String answer =
+                completion
+                        .choices()
+                        .stream()
+                        .flatMap(choice ->
+                                choice.message()
+                                        .content()
+                                        .stream()
+                        )
+                        .findFirst()
+                        .orElse(
+                                "I could not generate a response."
+                        );
+
+        return cleanResponse(answer);
+    }
+
+    private String cleanResponse(String response) {
+
+        return response
+                .replace("**", "")
+                .replace("__", "")
+                .replace("—", "-")
+                .replace("–", "-");
     }
 }

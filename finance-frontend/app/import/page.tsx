@@ -146,15 +146,15 @@ export default function ImportPage() {
                                 Transactions
                             </Link>
 
-                            <Link href="/goals">
-                                Goals
-                            </Link>
-
                             <Link
                                 href="/import"
                                 className="font-semibold text-gray-900"
                             >
                                 Import
+                            </Link>
+
+                            <Link href="/goals">
+                                Goals
                             </Link>
 
                             <Link href="/coach">
@@ -172,9 +172,7 @@ export default function ImportPage() {
                     </h2>
 
                     <p className="mb-8 text-gray-600">
-                        Upload a CSV bank
-                        export to automatically
-                        add transactions.
+                        Upload a CSV bank export to automatically add transactions.
                     </p>
 
                     {error && (
@@ -197,11 +195,8 @@ export default function ImportPage() {
                         </h3>
 
                         <p className="mb-6 text-sm text-gray-600">
-                            Your current
-                            importer expects
-                            columns for Date,
-                            Description and
-                            Amount.
+                            Your current importer expects columns for Date,
+                            Description and Amount.
                         </p>
 
                         <form
@@ -221,8 +216,7 @@ export default function ImportPage() {
 
                                 {selectedFile && (
                                     <p className="mt-4 text-sm text-gray-600">
-                                        Selected
-                                        file:{" "}
+                                        Selected file:{" "}
                                         <span className="font-medium text-gray-900">
                                             {
                                                 selectedFile.name
@@ -249,8 +243,7 @@ export default function ImportPage() {
 
                     <section className="rounded-xl bg-white p-6 shadow">
                         <h3 className="mb-4 text-xl font-bold text-gray-900">
-                            Expected CSV
-                            Format
+                            Expected CSV Format
                         </h3>
 
                         <div className="overflow-x-auto">
@@ -278,8 +271,7 @@ export default function ImportPage() {
                                     </td>
 
                                     <td className="py-3 text-gray-700">
-                                        WOOLWORTHS
-                                        3147
+                                        WOOLWORTHS 3147
                                     </td>
 
                                     <td className="py-3 text-red-600">
@@ -293,9 +285,7 @@ export default function ImportPage() {
                                     </td>
 
                                     <td className="py-3 text-gray-700">
-                                        PAYROLL
-                                        ACME PTY
-                                        LTD
+                                        PAYROLL ACME PTY LTD
                                     </td>
 
                                     <td className="py-3 text-green-600">
@@ -307,12 +297,8 @@ export default function ImportPage() {
                         </div>
 
                         <p className="mt-4 text-sm text-gray-500">
-                            Negative amounts
-                            are treated as
-                            expenses and
-                            positive amounts
-                            are treated as
-                            income.
+                            Negative amounts are treated as expenses and
+                            positive amounts are treated as income.
                         </p>
                     </section>
 
@@ -321,16 +307,14 @@ export default function ImportPage() {
                             <section className="mt-8 rounded-xl bg-white p-6 shadow">
                                 <div className="mb-6 flex items-center justify-between">
                                     <h3 className="text-xl font-bold text-gray-900">
-                                        Imported
-                                        Transactions
+                                        Imported Transactions
                                     </h3>
 
                                     <Link
                                         href="/transactions"
                                         className="text-sm font-medium text-blue-600 hover:text-blue-800"
                                     >
-                                        View all
-                                        transactions
+                                        View all transactions
                                     </Link>
                                 </div>
 

@@ -102,12 +102,12 @@ export default function CoachPage() {
                                 Transactions
                             </Link>
 
-                            <Link href="/goals">
-                                Goals
-                            </Link>
-
                             <Link href="/import">
                                 Import
+                            </Link>
+
+                            <Link href="/goals">
+                                Goals
                             </Link>
 
                             <Link

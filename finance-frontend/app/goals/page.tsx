@@ -47,6 +47,9 @@ export default function GoalsPage() {
             Record<number, GoalProgress>
         >({});
 
+    const [currentSavingsInputs, setCurrentSavingsInputs] =
+        useState<Record<number, string>>({});
+
     const [form, setForm] =
         useState<GoalForm>({
             name: "",
@@ -61,7 +64,13 @@ export default function GoalsPage() {
     const [submitting, setSubmitting] =
         useState(false);
 
+    const [updatingGoalId, setUpdatingGoalId] =
+        useState<number | null>(null);
+
     const [error, setError] =
+        useState("");
+
+    const [successMessage, setSuccessMessage] =
         useState("");
 
     const fetchGoals = async () => {
@@ -84,6 +93,18 @@ export default function GoalsPage() {
                 await response.json();
 
             setGoals(data);
+
+            const savingsInputs:
+                Record<number, string> = {};
+
+            data.forEach((goal) => {
+                savingsInputs[goal.id] =
+                    String(goal.currentAmount);
+            });
+
+            setCurrentSavingsInputs(
+                savingsInputs
+            );
 
             const progressResults:
                 Record<number, GoalProgress> =
@@ -132,6 +153,7 @@ export default function GoalsPage() {
         try {
             setSubmitting(true);
             setError("");
+            setSuccessMessage("");
 
             const response =
                 await authenticatedFetch(
@@ -176,6 +198,10 @@ export default function GoalsPage() {
                 targetDate: "",
             });
 
+            setSuccessMessage(
+                "Savings goal added successfully."
+            );
+
             await fetchGoals();
         } catch (err) {
             console.error(err);
@@ -185,6 +211,88 @@ export default function GoalsPage() {
             );
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleUpdateSavings = async (
+        goal: SavingsGoal
+    ) => {
+        const newCurrentAmount =
+            Number(
+                currentSavingsInputs[
+                    goal.id
+                    ]
+            );
+
+        if (
+            Number.isNaN(
+                newCurrentAmount
+            ) ||
+            newCurrentAmount < 0
+        ) {
+            setError(
+                "Current savings must be zero or greater."
+            );
+
+            return;
+        }
+
+        try {
+            setUpdatingGoalId(
+                goal.id
+            );
+
+            setError("");
+            setSuccessMessage("");
+
+            const response =
+                await authenticatedFetch(
+                    `http://localhost:8080/api/goals/${goal.id}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+
+                        body: JSON.stringify({
+                            name:
+                            goal.name,
+
+                            targetAmount:
+                            goal.targetAmount,
+
+                            currentAmount:
+                            newCurrentAmount,
+
+                            targetDate:
+                            goal.targetDate,
+                        }),
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Failed to update savings"
+                );
+            }
+
+            setSuccessMessage(
+                `${goal.name} savings updated successfully.`
+            );
+
+            await fetchGoals();
+        } catch (err) {
+            console.error(err);
+
+            setError(
+                "Could not update current savings."
+            );
+        } finally {
+            setUpdatingGoalId(
+                null
+            );
         }
     };
 
@@ -202,6 +310,7 @@ export default function GoalsPage() {
 
         try {
             setError("");
+            setSuccessMessage("");
 
             const response =
                 await authenticatedFetch(
@@ -216,6 +325,10 @@ export default function GoalsPage() {
                     "Failed to delete goal"
                 );
             }
+
+            setSuccessMessage(
+                "Savings goal deleted successfully."
+            );
 
             await fetchGoals();
         } catch (err) {
@@ -255,17 +368,17 @@ export default function GoalsPage() {
                             </Link>
 
                             <Link
-                                href="/goals"
-                                className="font-semibold text-gray-900"
-                            >
-                                Goals
-                            </Link>
-
-                            <Link
                                 href="/import"
                                 className="transition hover:text-gray-900"
                             >
                                 Import
+                            </Link>
+
+                            <Link
+                                href="/goals"
+                                className="font-semibold text-gray-900"
+                            >
+                                Goals
                             </Link>
 
                             <Link
@@ -293,6 +406,14 @@ export default function GoalsPage() {
                     {error && (
                         <div className="mb-6 rounded-lg bg-red-100 p-4 text-red-700">
                             {error}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="mb-6 rounded-lg bg-green-100 p-4 text-green-700">
+                            {
+                                successMessage
+                            }
                         </div>
                     )}
 
@@ -535,7 +656,7 @@ export default function GoalsPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div className="mb-6 grid grid-cols-3 gap-4 text-sm">
                                                     <div>
                                                         <p className="text-gray-500">
                                                             Saved
@@ -581,6 +702,62 @@ export default function GoalsPage() {
                                                                 )
                                                                 : "0.00"}
                                                         </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="border-t border-gray-200 pt-5">
+                                                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                                                        Update Current Savings
+                                                    </label>
+
+                                                    <div className="flex gap-3">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            value={
+                                                                currentSavingsInputs[
+                                                                    goal
+                                                                        .id
+                                                                    ] ??
+                                                                ""
+                                                            }
+                                                            onChange={(
+                                                                event
+                                                            ) =>
+                                                                setCurrentSavingsInputs(
+                                                                    {
+                                                                        ...currentSavingsInputs,
+
+                                                                        [goal.id]:
+                                                                        event
+                                                                            .target
+                                                                            .value,
+                                                                    }
+                                                                )
+                                                            }
+                                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                                                            placeholder="Enter amount saved"
+                                                        />
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleUpdateSavings(
+                                                                    goal
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                updatingGoalId ===
+                                                                goal.id
+                                                            }
+                                                            className="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            {updatingGoalId ===
+                                                            goal.id
+                                                                ? "Updating..."
+                                                                : "Update Savings"}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

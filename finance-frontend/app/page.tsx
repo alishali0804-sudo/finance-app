@@ -39,6 +39,15 @@ interface MonthlyData {
     amount: number;
 }
 
+const CHART_COLORS = [
+    "#A7C7E7",
+    "#B7E4C7",
+    "#F9D5A7",
+    "#CDB4DB",
+    "#FFB3C6",
+    "#BDE0FE",
+];
+
 export default function Home() {
     const user = getUser();
 
@@ -175,12 +184,12 @@ export default function Home() {
                                 Transactions
                             </Link>
 
-                            <Link href="/goals">
-                                Goals
-                            </Link>
-
                             <Link href="/import">
                                 Import
+                            </Link>
+
+                            <Link href="/goals">
+                                Goals
                             </Link>
 
                             <Link href="/coach">
@@ -202,8 +211,7 @@ export default function Home() {
                         </h1>
 
                         <p className="mt-2 text-gray-600">
-                            Here is an overview of your
-                            finances.
+                            Here is an overview of your finances.
                         </p>
                     </div>
 
@@ -291,6 +299,12 @@ export default function Home() {
                                                             (_, index) => (
                                                                 <Cell
                                                                     key={`cell-${index}`}
+                                                                    fill={
+                                                                        CHART_COLORS[
+                                                                        index %
+                                                                        CHART_COLORS.length
+                                                                            ]
+                                                                    }
                                                                 />
                                                             )
                                                         )}
@@ -320,8 +334,7 @@ export default function Home() {
 
                                     {monthlyData.length === 0 ? (
                                         <p className="text-gray-500">
-                                            No monthly spending
-                                            data yet.
+                                            No monthly spending data yet.
                                         </p>
                                     ) : (
                                         <div className="h-80">
@@ -355,6 +368,13 @@ export default function Home() {
                                                     <Bar
                                                         dataKey="amount"
                                                         name="Spending"
+                                                        fill="#A7C7E7"
+                                                        radius={[
+                                                            6,
+                                                            6,
+                                                            0,
+                                                            0,
+                                                        ]}
                                                     />
                                                 </BarChart>
                                             </ResponsiveContainer>
